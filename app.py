@@ -4,6 +4,17 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+PUSHBULLET_TOKEN = "o.SDSws2OBVRRZcYqiz3fye9BTKcWrmt1V"  # your real token
+
+def send_pushbullet_note(title, body):
+    response = requests.post(
+        "https://api.pushbullet.com/v2/pushes",
+        json={"type": "note", "title": title, "body": body},
+        headers={"Access-Token": PUSHBULLET_TOKEN}
+    )
+    print(f"[Friday] Pushbullet response: {response.status_code}")
+    return response
+
 @app.route("/")
 def home():
     return "👋 Hello from Friday's brain."
@@ -11,18 +22,13 @@ def home():
 @app.route("/set_alarm", methods=["GET"])
 def set_alarm():
     time_str = request.args.get("time", "06:45")
-    timestamp = int(time.time())  # 중복 방지용
+    timestamp = int(time.time())
     full_text = f"set_alarm:=:{time_str}:{timestamp}"
-
+    
     print(f"[Friday] Alarm requested for: {time_str} (msg: {full_text})")
+    send_pushbullet_note("Friday", full_text)
 
-    requests.get("https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush", params={
-        "apikey": "b42fb597f8604f96b8fb46375cd79b5d",
-        "deviceId": "b42fb597f8604f96b8fb46375cd79b5d",
-        "text": full_text
-    })
-
-    return f"Alarm set for {time_str} (sent via Join)", 200
+    return f"Alarm set for {time_str} (sent via Pushbullet)", 200
 
 @app.route("/ping")
 def ping():
