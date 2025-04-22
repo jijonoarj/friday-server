@@ -4,32 +4,36 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# Pushbullet 토큰 (주의: 노출 금지)
-PUSHBULLET_TOKEN = "o.SDSws2OBVRRZcYqiz3fye9BTKcWrmt1V"  # 여기에 본인 토큰 입력
-
-def send_pushbullet_note(title, body):
-    response = requests.post(
-        "https://api.pushbullet.com/v2/pushes",
-        json={"type": "note", "title": title, "body": body},
-        headers={"Access-Token": PUSHBULLET_TOKEN}
-    )
-    print(f"[Friday] Pushbullet response: {response.status_code}, {response.text}")
-    return response
+# Your actual Pushbullet token
+PUSHBULLET_TOKEN = "o.SDSws2OBVRRZcYqiz3fye9BTKcWrmt1V"
 
 @app.route("/")
 def home():
     return "👋 Hello from Friday's brain."
 
-@app.route("/set_alarm", methods=["GET"])
-def set_alarm():
-    time_str = request.args.get("time", "06:45")
+@app.route("/command", methods=["GET"])
+def command():
+    text = request.args.get("text", "noop:=:missing_command")
     timestamp = int(time.time())
-    full_text = f"set_alarm:=:{time_str}:{timestamp}"
+    full_text = f"{text}:{timestamp}"  # Add timestamp to ensure uniqueness
 
-    print(f"[Friday] Alarm requested for: {time_str} (msg: {full_text})")
-    send_pushbullet_note("Friday", full_text)
+    print(f"[Friday] Command requested: {full_text}")
 
-    return f"Alarm set for {time_str} (sent via Pushbullet)", 200
+    # Send to Pushbullet
+    requests.post(
+        "https://api.pushbullet.com/v2/pushes",
+        headers={
+            "Access-Token": PUSHBULLET_TOKEN,
+            "Content-Type": "application/json"
+        },
+        json={
+            "type": "note",
+            "title": "Friday",
+            "body": full_text
+        }
+    )
+
+    return f"Command sent: {full_text}", 200
 
 @app.route("/ping")
 def ping():
