@@ -4,7 +4,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-PUSHBULLET_TOKEN = "o.SDSws2OBVRRZcYqiz3fye9BTKcWrmt1V"  # your real token
+# Pushbullet 토큰 (주의: 노출 금지)
+PUSHBULLET_TOKEN = "o.SDSws2OBVRRZcYqiz3fye9BTKcWrmt1V"  # 여기에 본인 토큰 입력
 
 def send_pushbullet_note(title, body):
     response = requests.post(
@@ -12,7 +13,7 @@ def send_pushbullet_note(title, body):
         json={"type": "note", "title": title, "body": body},
         headers={"Access-Token": PUSHBULLET_TOKEN}
     )
-    print(f"[Friday] Pushbullet response: {response.status_code}")
+    print(f"[Friday] Pushbullet response: {response.status_code}, {response.text}")
     return response
 
 @app.route("/")
@@ -24,7 +25,7 @@ def set_alarm():
     time_str = request.args.get("time", "06:45")
     timestamp = int(time.time())
     full_text = f"set_alarm:=:{time_str}:{timestamp}"
-    
+
     print(f"[Friday] Alarm requested for: {time_str} (msg: {full_text})")
     send_pushbullet_note("Friday", full_text)
 
